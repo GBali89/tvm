@@ -357,6 +357,7 @@ def compare_tflite_with_tvm(
                 out_names=out_names,
                 mode=mode,
             )
+            breakpoint()
             # WARNING: the results could well be random values clipped to 0 or 255 because of badly
             # tuned output range for the specific operator. While adding test ensure that we aren't
             # getting only clipped values in output tensors that still pass the assertion.
@@ -1897,6 +1898,35 @@ def test_forward_concatenation():
         ],
         1,
     )
+
+
+#######################################################################
+# Broadcast_to
+# -------------
+
+def test_forward_broadcast_to():
+    tensor = np.arange(3).reshape((1, 3))
+    with tf.Graph().as_default():
+        in_data = array_ops.placeholder(shape=tensor.shape, dtype=tensor.dtype, name=f"in_0")
+        out = gen_array_ops.broadcast_to(in_data, (2, 3))
+        name = [f"in_0:0"]
+
+      # breakpoint()
+
+        compare_tflite_with_tvm(tensor, name, [in_data], [out], experimental_new_converter=True)
+
+    # _test_concatenation([np.arange(6).reshape((1, 2, 1, 3)), np.arange(6).reshape((1, 2, 1, 3))], 1)
+
+    # _test_concatenation([np.arange(6).reshape((3, 2)), np.arange(6).reshape((3, 2))], 1)
+
+    # _test_concatenation(
+    #     [
+    #         np.arange(6).reshape((2, 1, 1, 3)),
+    #         np.arange(6).reshape((2, 1, 1, 3)),
+    #         np.arange(6).reshape((2, 1, 1, 3)),
+    #     ],
+    #     1,
+    # )
 
 
 #######################################################################
