@@ -79,6 +79,7 @@ class OperatorConverter(object):
             "ARG_MIN": self.convert_arg_min,
             "AVERAGE_POOL_2D": self.convert_average_pool2d,
             "BATCH_TO_SPACE_ND": self.convert_batch_to_space_nd,
+            "BROADCAST_TO": self.convert_broadcast_to,
             "CAST": self.convert_cast,
             "CEIL": self.convert_ceil,
             "CONCATENATION": self.convert_concatenation,
@@ -1185,6 +1186,19 @@ class OperatorConverter(object):
         else:
             out = self.convert_fused_activation_function(out, fused_activation_fn)
 
+        return out
+
+    def convert_broadcast_to(self, op):
+        input_tensors = self.get_input_tensors(op)
+        input_tensor = input_tensors[0]
+        in_expr = self.get_expr(input_tensor.tensor_idx)
+
+        output_tensors = self.get_output_tensors(op)
+        output_tensor = output_tensors[0]
+
+        output_shape = to_int_list(self.get_tensor_shape(output_tensor))
+
+        out = _op.broadcast_to(in_expr, output_shape)
         return out
 
     def _convert_unary_elemwise(self, relay_op, op):

@@ -357,7 +357,6 @@ def compare_tflite_with_tvm(
                 out_names=out_names,
                 mode=mode,
             )
-            breakpoint()
             # WARNING: the results could well be random values clipped to 0 or 255 because of badly
             # tuned output range for the specific operator. While adding test ensure that we aren't
             # getting only clipped values in output tensors that still pass the assertion.
