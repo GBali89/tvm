@@ -1910,8 +1910,6 @@ def test_forward_broadcast_to():
         out = gen_array_ops.broadcast_to(in_data, (2, 3))
         name = [f"in_0:0"]
 
-      # breakpoint()
-
         compare_tflite_with_tvm(tensor, name, [in_data], [out], experimental_new_converter=True)
 
     # _test_concatenation([np.arange(6).reshape((1, 2, 1, 3)), np.arange(6).reshape((1, 2, 1, 3))], 1)
@@ -1927,6 +1925,25 @@ def test_forward_broadcast_to():
     #     1,
     # )
 
+#######################################################################
+# Scatter_nd
+# -------------
+
+def test_forward_scatter_nd():
+    indices_tensor = tf.constant([[1], [3]])
+    updates_tensor = tf.constant([[[5, 5, 5, 5], [6, 6, 6, 6],
+                            [7, 7, 7, 7], [8, 8, 8, 8]],
+                           [[5, 5, 5, 5], [6, 6, 6, 6],
+                            [7, 7, 7, 7], [8, 8, 8, 8]]])
+    shape_tensor = tf.constant([4, 4, 4])
+    with tf.Graph().as_default():
+        indices = array_ops.placeholder(shape=indices_tensor.shape, dtype=indices_tensor.dtype)
+        updates = array_ops.placeholder(shape=updates_tensor.shape, dtype=updates_tensor.dtype)
+        shape = array_ops.placeholder(shape=shape_tensor.shape, dtype=shape_tensor.dtype)
+        name = ["indices", "updates", "shape"]
+
+        out = gen_array_ops.scatter_nd(indices, updates, shape)
+        compare_tflite_with_tvm([indices_tensor, updates_tensor, shape_tensor], name, [indices, updates, shape], [out])
 
 #######################################################################
 # Unary elemwise
