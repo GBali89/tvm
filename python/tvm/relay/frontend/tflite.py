@@ -1212,10 +1212,7 @@ class OperatorConverter(object):
 
         indices_expr = self.get_tensor_expr(indices_tensor)
         updates_expr = self.get_tensor_expr(updates_tensor)
-        # shape_expr = self.get_tensor_expr(shape_tensor)
 
-        # indices_data = self.get_tensor_value(indices_tensor)
-        # updates_data = self.get_tensor_value(updates_tensor)
         shape_data = self.get_tensor_value(shape_tensor)
 
         output_tensors = self.get_output_tensors(op)
@@ -1223,20 +1220,8 @@ class OperatorConverter(object):
 
         output_tensor = output_tensors[0]
 
-        # output_data = self.get_tensor_value(output_tensor)
-
         updates_dtype = self.get_tensor_type_str(updates_tensor.tensor.Type())
-        # output_shape = to_int_list(self.get_tensor_shape(output_tensor))
-
-        # data = _op.zeros(shape_expr, dtype=updates_dtype)
         data = _op.zeros(to_int_list(shape_data), dtype=updates_dtype)
-
-
-        # indices_dims = len(_infer_shape(indices_expr))
-        # indices_t = _op.transpose(indices_expr, axes=[-1] + list(range(indices_dims - 1)))
-        # out = _op.scatter_nd(data, indices_t, updates_expr)
-
-        # indices_dim_asd = len(self.get_tensor_shape(indices_tensor))
 
         indices_dim = len(_infer_shape(indices_expr))
         axes = list(range(indices_dim))
