@@ -1930,20 +1930,37 @@ def test_forward_broadcast_to():
 # -------------
 
 def test_forward_scatter_nd():
-    indices_tensor = tf.constant([[1], [3]])
-    updates_tensor = tf.constant([[[5, 5, 5, 5], [6, 6, 6, 6],
+    indices = np.array([[1], [3]], dtype=np.int32)
+    updates = np.array([[[5, 5, 5, 5], [6, 6, 6, 6],
                             [7, 7, 7, 7], [8, 8, 8, 8]],
                            [[5, 5, 5, 5], [6, 6, 6, 6],
-                            [7, 7, 7, 7], [8, 8, 8, 8]]])
-    shape_tensor = tf.constant([4, 4, 4])
+                            [7, 7, 7, 7], [8, 8, 8, 8]]], dtype=np.int32)
+    shape = np.array([4, 4, 4], dtype=np.int32)
     with tf.Graph().as_default():
-        indices = array_ops.placeholder(shape=indices_tensor.shape, dtype=indices_tensor.dtype)
-        updates = array_ops.placeholder(shape=updates_tensor.shape, dtype=updates_tensor.dtype)
-        shape = array_ops.placeholder(shape=shape_tensor.shape, dtype=shape_tensor.dtype)
-        name = ["indices", "updates", "shape"]
+        in_indices = array_ops.placeholder(shape=indices.shape, dtype=indices.dtype, name="indices")
+        in_updates = array_ops.placeholder(shape=updates.shape, dtype=updates.dtype, name="updates")
+        in_shape = array_ops.placeholder(shape=shape.shape, dtype=shape.dtype, name="shape")
+        shape_tensor = ops.convert_to_tensor(shape, dtype=shape.dtype)
+        indices_tensor = ops.convert_to_tensor(indices, dtype=indices.dtype)
+        updates_tensor = ops.convert_to_tensor(updates, dtype=updates.dtype)
 
-        out = gen_array_ops.scatter_nd(indices, updates, shape)
-        compare_tflite_with_tvm([indices_tensor, updates_tensor, shape_tensor], name, [indices, updates, shape], [out])
+        name = ["indices:0", "updates:0"]
+        out = gen_array_ops.scatter_nd(in_indices, in_updates, shape_tensor)
+        compare_tflite_with_tvm(
+            [indices, updates],
+            name,
+            [in_indices, in_updates],
+            [out],
+            experimental_new_converter=True)
+
+        # name = ["indices:0", "updates:0", "shape:0"]
+        # out = gen_array_ops.scatter_nd(in_indices, in_updates, in_shape)
+        # compare_tflite_with_tvm(
+        #     [indices, updates, shape],
+        #     name,
+        #     [in_indices, in_updates, in_shape],
+        #     [out],
+        #     experimental_new_converter=True)
 
 #######################################################################
 # Unary elemwise

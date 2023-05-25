@@ -150,6 +150,7 @@ class OperatorConverter(object):
             "RSQRT": self.convert_rsqrt,
             "REVERSE_SEQUENCE": self.convert_reverse_sequence,
             "REVERSE_V2": self.convert_reverse_v2,
+            "SCATTER_ND": self.convert_scatter_nd,
             "SELECT": self.convert_select,
             "SHAPE": self.convert_shape,
             "SIN": self.convert_sin,
@@ -1191,7 +1192,7 @@ class OperatorConverter(object):
     def convert_broadcast_to(self, op):
         input_tensors = self.get_input_tensors(op)
         input_tensor = input_tensors[0]
-        in_expr = self.get_expr(input_tensor.tensor_idx)
+        in_expr = self.get_tensor_expr(input_tensor)
 
         output_tensors = self.get_output_tensors(op)
         output_tensor = output_tensors[0]
@@ -1200,6 +1201,52 @@ class OperatorConverter(object):
 
         out = _op.broadcast_to(in_expr, output_shape)
         return out
+
+    def convert_scatter_nd(self, op):
+        input_tensors = self.get_input_tensors(op)
+        assert len(input_tensors) == 3, "input tensors length should be 3"
+
+        indices_tensor = input_tensors[0]
+        updates_tensor = input_tensors[1]
+        shape_tensor = input_tensors[2]
+
+        indices_expr = self.get_tensor_expr(indices_tensor)
+        updates_expr = self.get_tensor_expr(updates_tensor)
+        # shape_expr = self.get_tensor_expr(shape_tensor)
+
+        # indices_data = self.get_tensor_value(indices_tensor)
+        # updates_data = self.get_tensor_value(updates_tensor)
+        shape_data = self.get_tensor_value(shape_tensor)
+
+        output_tensors = self.get_output_tensors(op)
+        assert len(output_tensors) == 1, "output tensors length should be 1"
+
+        output_tensor = output_tensors[0]
+
+        # output_data = self.get_tensor_value(output_tensor)
+
+        updates_dtype = self.get_tensor_type_str(updates_tensor.tensor.Type())
+        # output_shape = to_int_list(self.get_tensor_shape(output_tensor))
+
+        # data = _op.zeros(shape_expr, dtype=updates_dtype)
+        data = _op.zeros(to_int_list(shape_data), dtype=updates_dtype)
+
+
+        # indices_dims = len(_infer_shape(indices_expr))
+        # indices_t = _op.transpose(indices_expr, axes=[-1] + list(range(indices_dims - 1)))
+        # out = _op.scatter_nd(data, indices_t, updates_expr)
+
+        # indices_dim_asd = len(self.get_tensor_shape(indices_tensor))
+
+        indices_dim = len(_infer_shape(indices_expr))
+        axes = list(range(indices_dim))
+        indices_t = _op.transpose(indices_expr, axes[-1:] + axes[:-1]) 
+        out = _op.scatter_nd(
+            data, indices_t, updates_expr, "update"
+        )
+
+        return out
+
 
     def _convert_unary_elemwise(self, relay_op, op):
         """Generic method to convert TFLite unary elemwise functions"""
